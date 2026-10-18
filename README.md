@@ -1,20 +1,24 @@
 # download-picturebook
 
-Kimi Work 技能（skill）：搜索在线翻页绘本（fliphtml5/anyflip 等），对比多个上传版本选出最优（页数全、分辨率高、含封面封底），走本机代理直连下载全部页面原图，合成为全画质 PDF 并上传到 Google Drive。
+下载公开绘本页面并合成 PDF；按用户要求上传到其 Google Drive。
 
-## 触发词
+当前版本采用隐私加固默认值：HTTPS 域名白名单、拒绝重定向和带凭据 URL、禁用 curl 用户配置与继承的网络环境、不使用浏览器 Cookie、私有文件权限、下载大小上限、不覆盖已有输出。
 
-下载绘本、找绘本、绘本存到 Google Drive/云盘、绘本转存、搜一本绘本/图画书并下载。适用于《妈妈买绿豆》《大卫，不可以》这类公开托管的翻页电子书。
+## 使用
 
-## 目录结构
+需要 Python 3.10+、curl、Pillow、reportlab。使用可信来源提供的依赖。
 
+```bash
+umask 077
+task_dir=$(mktemp -d ./picturebook.XXXXXX)
+bash scripts/fetch_pages_direct.sh 'https://online.fliphtml5.com/USER/BOOK/' 1 80 "$task_dir/pages"
+python3 -I scripts/build_pdf.py "$task_dir/pages" "$task_dir/book.pdf"
 ```
-SKILL.md                      # 技能定义与完整流程文档
-scripts/fetch_pages.sh        # 经 kimi-webbridge 浏览器抓图（回退方案）
-scripts/fetch_pages_direct.sh # 本机代理直连逐页下载（首选方案）
-scripts/build_pdf.py          # webp 页面图合成全画质 PDF（reportlab）
-```
 
-## 免责声明
+支持 online.fliphtml5.com 和 online.anyflip.com 的两段书本路径。默认不使用代理；可在下载命令最后追加无认证的本地 HTTP 代理地址。不传入密码、token 或签名链接。
 
-绘本版权归原作者所有，归原出版方（如信谊/明天出版社等）所有，公开上传者多为幼儿园/老师。本工具下载的电子版**仅供家庭内部阅读**，请勿用于任何商业用途或公开传播；如有条件请支持正版实体书。
+浏览器回退已停用；旧的 fetch_pages.sh 会直接报错退出。云盘上传流程见 SKILL.md，只有用户要求上传时执行，不支持绕过连接器大小或权限限制。
+
+验证：`python3 -m unittest discover -s tests -v`。
+
+当前版本不会清除旧提交中的个人文件夹 ID，也无法保证外部代理、连接器或主机的安全。只下载有权使用的内容。
