@@ -18,7 +18,7 @@ curl -sL -x "$PROXY" -A "$UA" -o p1.webp "$BASE/files/large/1.webp" && file p1.w
 3. **选最优版本**，优先级：页数完整（含封面/封底）> 单页分辨率高 > 单页体积大（画质指标）。
 4. **逐页下载**：`bash scripts/fetch_pages_direct.sh "<书本页URL>" 1 <总页数> <输出目录>`。脚本自动探测本机代理端口（7897/7890/1087/8888/1080/8080），逐页 GET `files/large/N.webp` 存为 `pageN.webp`，遇 404 自动停止。
 5. **合成 PDF**：`python3 scripts/build_pdf.py <图片目录> <输出.pdf>`。保留原图分辨率，JPEG q92 嵌入，全画质不降采样。绘本 PDF 通常 15~30 MB。
-6. **上传 Google Drive** 到 Kimi_download 文件夹（ID `1-B-OfslXdnWtBIUu0iW92CHVt8y1_e92`，若在用户的 Drive 中找不到该文件夹则创建，用 google-drive MCP 的 `create_file` 建 folder），上传方式按体积二选一：
+6. **上传 Google Drive** 到 Kimi_download 文件夹（ID `<你的 Kimi_download 文件夹 ID（在 Drive 中创建后填入，勿提交到公开仓库）>`，若在用户的 Drive 中找不到该文件夹则创建，用 google-drive MCP 的 `create_file` 建 folder），上传方式按体积二选一：
    - **PDF < 7 MB**：用 google-drive MCP `create_file`，`base64Content` 传内容、`contentMimeType="application/pdf"`、`disableConversionToGoogleType=true`、parentId 为文件夹 ID。注意 agent-gw 网关请求体限制约 14 MB（base64 后），所以二进制约 7 MB 是上限。
    - **PDF ≥ 7 MB（常见）**：走浏览器网页上传——kimi-webbridge `navigate` 打开 `https://drive.google.com/drive/folders/<文件夹ID>`，snapshot 点「新建 → 文件上传」，再操作文件对话框。**webbridge 的 `upload` 和 CDP `DOM.setFileInputFiles` 会被扩展权限拦截**（缺「允许访问文件网址」），改用 **kimi-cu 操作 macOS 原生打开对话框**：对话框弹出后用 Cmd+Shift+G 输入 PDF 绝对路径、回车。上传完成后轮询网页文件列表确认文件名出现且进度条消失，再用 MCP `get_file_metadata` 核对 fileSize 与本地一致。
 7. **确认上传成功后清理本地**：删除工作区 PDF 和 pages_* 图片目录。上传未确认前绝不删本地文件。
